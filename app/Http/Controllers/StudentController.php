@@ -13,7 +13,7 @@ class StudentController extends Controller
         return view('student.index');
     }
 
-    public function fetchstudent()
+    public function fetchStudent()
     {
         $students = Student::all();
         return response()->json([
@@ -23,31 +23,90 @@ class StudentController extends Controller
 
     public function store(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
-            'name' => 'required|max:191',
-            'email' => 'required|email|max:191',
-            'phone' => 'required|max:191',
-            'course' => 'required|max:191',
+            'name'          => 'required|max:191',
+            'email'         => 'required|email|max:191',
+            'phone'         => 'required|max:191',
+            'course'        => 'required|max:191',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 400,
-                'errors' => $validator->messages(),
+                'status'    => 400,
+                'errors'    => $validator->messages(),
             ]);
         } else {
             $student = new Student;
-            $student->name = $request->input('name');
-            $student->email = $request->input('email');
-            $student->phone = $request->input('phone');
-            $student->course = $request->input('course');
+            $student->name          = $request->input('name');
+            $student->email         = $request->input('email');
+            $student->phone         = $request->input('phone');
+            $student->course        = $request->input('course');
             $student->save();
             return response()->json([
-                'status' => 200,
-                'message' => 'Student Added Successfully!',
+                'status'    => 200,
+                'message'   => 'Student Added Successfully!',
             ]);
         }
         //$student = new Student;
+    }
+    public function edit($id)
+    {
+        $student = Student::find($id);
+        if ($student) //Se tiver tudo ok retorna abaixo
+        {
+            return response()->json([
+                'status'    => 200,
+                'student'   => $student,
+            ]);
+        } else //Se não for encontrado o parametro retorna mensagem abaixo
+        {
+            return response()->json([
+                'status'    => 404,
+                'message'   => 'Student Not Found',
+            ]);
+        }
+    }
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'name'          => 'required|max:191',
+            'email'         => 'required|email|max:191',
+            'phone'         => 'required|max:191',
+            'course'        => 'required|max:191',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'    => 400,
+                'errors'    => $validator->messages(),
+            ]);
+        } else {
+            $student = Student::find($id); // alteração
+
+            if ($student) //Se tiver tudo ok retorna abaixo
+            {
+                $student->name          = $request->input('name');
+                $student->email         = $request->input('email');
+                $student->phone         = $request->input('phone');
+                $student->course        = $request->input('course');
+                $student->update(); // alteração
+
+                return response()->json([
+                    'status'    => 200,
+                    'message'   => 'Student Updated Successfully!',
+                ]);
+                return response()->json([
+                    'status'    => 200,
+                    'student'   => $student,
+                ]);
+            }
+            else //Se não for encontrado os parametros retorna mensagem abaixo
+            {
+                return response()->json([
+                    'status'    => 404,
+                    'message'   => 'Student Not Found',
+                ]);
+            }
+        }
     }
 }
