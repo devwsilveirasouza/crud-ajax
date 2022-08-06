@@ -81,6 +81,31 @@
     </div>
     {{-- End EditStudentModal --}}
 
+    {{-- DeleteStudentModal --}}
+    <div class="modal fade" id="DeleteStudentModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <!-- alterações -->
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Delete Student</h5><!-- alterações -->
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <!-- inclusão para recuperação do id (hidden -> não aparece pro usuário) -->
+                    <input type="hidden" id="delete_stud_id">
+                    <h4>Are you sure? Want to delete?</h4>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary delete_student_btn">Yes Delete</button>
+                    <!-- alterações -->
+                </div>
+            </div>
+        </div>
+    </div>
+    {{-- End DeleteStudentModal --}}
+
 
     <div class="container py-5">
         <div class="row">
@@ -137,18 +162,53 @@
                         $('tbody').html("");
                         $.each(response.students, function(key, item) {
                             $('tbody').append('<tr>\
-                                        <td>' + item.id + '</td>\
-                                        <td>' + item.name + '</td>\
-                                        <td>' + item.email + '</td>\
-                                        <td>' + item.phone + '</td>\
-                                        <td>' + item.course + '</td>\
-                                     <td><button type="button" value="' + item.id + '" class="edit_student btn btn-primary btn-sm">Edit</button></td>\
-                                     <td><button type="button" value="' + item.id + '" class="delete_student btn btn-danger btn-sm">Delete</button></td>\
-                                    </tr>');
+                                            <td>' + item.id + '</td>\
+                                            <td>' + item.name + '</td>\
+                                            <td>' + item.email + '</td>\
+                                            <td>' + item.phone + '</td>\
+                                            <td>' + item.course + '</td>\
+                                         <td><button type="button" value="' + item.id + '" class="edit_student btn btn-primary btn-sm">Edit</button></td>\
+                                         <td><button type="button" value="' + item.id + '" class="delete_student btn btn-danger btn-sm">Delete</button></td>\
+                                        </tr>');
                         });
                     }
                 });
             }
+            //Deletar registro - eventos de click vêm do botão da table principal
+            $(document).on('click', '.delete_student', function(e) {
+                e.preventDefault();
+
+                var stud_id = $(this).val(); //atribui o valor a variável
+                //alert(stud_id);
+                $('#delete_stud_id').val(stud_id);
+                $('#DeleteStudentModal').modal('show');
+            });
+            $(document).on('click', '.delete_student_btn', function(e) {
+                e.preventDefault();
+
+                $(this).text("Deleting");//mensagem no botão de delete ao clicar
+                var stud_id = $('#delete_stud_id').val();
+                // Configurando o token dentro do cabeçalho do ajax
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+
+                $.ajax({
+                    type: "DELETE",
+                    url: "/delete-student/" + stud_id,
+                    success: function (response) {
+                        // console.log(response);
+                        $('#success_message').addClass('alert alert-success');
+                        $('#success_message').text(response.message);
+                        $('#DeleteStudentModal').modal('hide');
+                        $('.delete_student_btn').text("Yes Deleted");
+                        fetchstudent();
+                    }
+                });
+            });
+            //Chama o formulário de edição
             $(document).on('click', '.edit_student', function(e) {
                 e.preventDefault();
                 var stud_id = $(this).val(); //atribuindo id a variavel
@@ -173,7 +233,7 @@
                     }
                 });
             });
-            //Atualiza o registro
+            //Atualiza os dados do formulário
             $(document).on('click', '.update_student', function(e) {
                 e.preventDefault();
                 //Texto do botão update
@@ -225,7 +285,8 @@
                             //Fechar formulário de update
                             $('#EditStudentModal').modal('hide');
                             $('.update_student').text("Update");
-                            fetchstudent();//Chamar função de carregamento da informações da tabela
+                            fetchstudent
+                        (); //Chamar função de carregamento da informações da tabela
                         }
                     }
                 });
